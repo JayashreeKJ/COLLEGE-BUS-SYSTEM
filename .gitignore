@@ -12,6 +12,9 @@ node_modules/
 dist/
 build/
 
+# Maven build output
+target/
+
 # Logs
 *.log
 npm-debug.log*
