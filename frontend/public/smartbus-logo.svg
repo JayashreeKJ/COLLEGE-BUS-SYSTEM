@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none">
+  <defs>
+    <linearGradient id="sb-cyan-grad" x1="6" y1="2" x2="26" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#67e8f9" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+
+    <linearGradient id="sb-violet-grad" x1="10" y1="2" x2="22" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#c026d3" />
+      <stop offset="50%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#7c3aed" />
+    </linearGradient>
+  </defs>
+
+  <!-- Primary Angular Electric Kinetic Bolt (Electric Cyan) -->
+  <path d="M19 2L6 17H14.5L10.5 30L26 13.5H17L21 2H19Z" fill="url(#sb-cyan-grad)" />
+
+  <!-- Angular Speed & Power Facet (Electric Violet / Magenta) -->
+  <path d="M19 2L14.5 17H21L10.5 30L17.5 18H12L21 2H19Z" fill="url(#sb-violet-grad)" opacity="0.9" />
+
+  <!-- Precision Cyber Edge -->
+  <path d="M19 2L6 17H14.5L10.5 30" stroke="#a5f3fc" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

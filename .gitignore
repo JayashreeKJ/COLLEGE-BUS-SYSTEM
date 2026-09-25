@@ -26,13 +26,20 @@ pnpm-debug.log*
 Thumbs.db
 
 # IDE settings
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# Temporary files
+# Temporary, test, and legacy prototype files
 *.tmp
 *.temp
+login.json
+register.json
+BMS.html
 
 # Coverage
 coverage/

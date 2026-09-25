@@ -1,18 +1,34 @@
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import HomePage from '../pages/HomePage';
+import LandingPage from '../pages/LandingPage';
 import LoginPage from '../pages/LoginPage';
-import StudentDashboardPlaceholder from '../pages/student/StudentDashboardPlaceholder';
-import DriverDashboardPlaceholder from '../pages/driver/DriverDashboardPlaceholder';
-import AdminDashboardPlaceholder from '../pages/admin/AdminDashboardPlaceholder';
+import StudentDashboard from '../pages/student/StudentDashboard';
+import MyRoutePage from '../pages/student/MyRoutePage';
+import SchedulePage from '../pages/student/SchedulePage';
+import ProfilePage from '../pages/student/ProfilePage';
+import DriverDashboard from '../pages/driver/DriverDashboard';
+import AdminDashboard from '../pages/admin/AdminDashboard';
+import ProtectedRoute from '../components/common/ProtectedRoute';
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/student" element={<StudentDashboardPlaceholder />} />
-      <Route path="/driver" element={<DriverDashboardPlaceholder />} />
-      <Route path="/admin" element={<AdminDashboardPlaceholder />} />
+
+      {/* Student Portal Routes */}
+      <Route path="/student" element={<StudentDashboard />} />
+      <Route path="/student/route" element={<MyRoutePage />} />
+      <Route path="/student/schedule" element={<SchedulePage />} />
+      <Route path="/student/profile" element={<ProfilePage />} />
+
+      {/* Driver Cockpit */}
+      <Route path="/driver" element={<DriverDashboard />} />
+
+      {/* Admin Fleet Dashboard */}
+      <Route path="/admin" element={<AdminDashboard />} />
+
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

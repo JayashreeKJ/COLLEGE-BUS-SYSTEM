@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { checkBackendHealth } from '../services/healthService';
+import SmartBusLogo from '../components/common/SmartBusLogo';
+import { Bus, Shield, GraduationCap } from 'lucide-react';
 
 export default function HomePage() {
   const [healthData, setHealthData] = useState(null);
@@ -18,19 +20,19 @@ export default function HomePage() {
       {/* Hero Section */}
       <section style={{ textAlign: 'center', padding: '2.5rem 0 3rem' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-          <span className="badge badge-info">Phase 1 Foundation</span>
+          <span className="badge badge-purple">SIET Coimbatore</span>
           <span className="badge badge-success">Spring Boot & React</span>
         </div>
-        <h1 style={{ fontSize: '2.8rem', lineHeight: '1.2', marginBottom: '1rem' }}>
-          SmartBus – College Bus Management & Live Tracking
-        </h1>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <SmartBusLogo size={64} showText={true} />
+        </div>
         <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', maxWidth: '750px', margin: '0 auto 2rem' }}>
-          Next-generation campus transit management. Seamless real-time GPS tracking for students, intuitive journey controls for drivers, and centralized fleet oversight for college administrators.
+          Next-generation campus transit management for Sri Shakthi Institute of Engineering & Technology. Seamless real-time GPS tracking for students, intuitive journey controls for drivers, and fleet oversight for administrators.
         </p>
 
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link to="/login" className="btn btn-primary" style={{ padding: '0.85rem 2rem', fontSize: '1rem' }}>
-            Access Portal
+          <Link to="/student" className="btn btn-primary" style={{ padding: '0.85rem 2rem', fontSize: '1rem' }}>
+            Open Live Radar
           </Link>
           <a
             href="#system-status"
@@ -47,13 +49,15 @@ export default function HomePage() {
         <h2 style={{ fontSize: '1.6rem', marginBottom: '1rem', textAlign: 'center' }}>
           Dedicated User Portals
         </h2>
-        <div className="grid-3">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
           {/* Student Portal */}
           <div className="card">
-            <div style={{ fontSize: '2.2rem', marginBottom: '0.75rem' }}>🎓</div>
+            <div style={{ color: 'var(--primary)', marginBottom: '0.75rem' }}>
+              <GraduationCap size={36} />
+            </div>
             <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Student Portal</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-              View bus routes, stop timetables, driver contact details, and track your morning/evening bus live on Google Maps.
+              View bus routes, stop timetables, driver contact details, and track your morning/evening bus live on radar.
             </p>
             <Link to="/student" className="btn btn-secondary" style={{ width: '100%', fontSize: '0.85rem' }}>
               Open Student Portal →
@@ -62,7 +66,9 @@ export default function HomePage() {
 
           {/* Driver Portal */}
           <div className="card">
-            <div style={{ fontSize: '2.2rem', marginBottom: '0.75rem' }}>🚌</div>
+            <div style={{ color: '#38bdf8', marginBottom: '0.75rem' }}>
+              <Bus size={36} />
+            </div>
             <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Driver Portal</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
               View assigned buses and scheduled trips, start/stop journeys, and broadcast live device GPS coordinates.
@@ -74,7 +80,9 @@ export default function HomePage() {
 
           {/* Admin Portal */}
           <div className="card">
-            <div style={{ fontSize: '2.2rem', marginBottom: '0.75rem' }}>🛡️</div>
+            <div style={{ color: 'var(--purple)', marginBottom: '0.75rem' }}>
+              <Shield size={36} />
+            </div>
             <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Admin Portal</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
               Manage fleet vehicles, driver registrations, routes, sequenced stops, timetables, and monitor active campus trips.
@@ -92,7 +100,7 @@ export default function HomePage() {
           <div>
             <h3 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>Backend REST API Health</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              Verifies live connectivity between React frontend and Spring Boot backend (<code style={{ color: 'var(--accent)' }}>/api/health</code>).
+              Verifies live connectivity between React frontend and Spring Boot backend (<code style={{ color: 'var(--primary)' }}>/api/health</code>).
             </p>
           </div>
           <div>
