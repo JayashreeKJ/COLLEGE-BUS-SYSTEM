@@ -35,7 +35,7 @@ Implementation: NOT STARTED
 
 ---
 
-## 4. Key Architectural Distinction: GPS vs. Google Maps
+## 4. Key Architectural Distinction: GPS vs. Google Maps  
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        CORE ARCHITECTURAL RULE                         │
