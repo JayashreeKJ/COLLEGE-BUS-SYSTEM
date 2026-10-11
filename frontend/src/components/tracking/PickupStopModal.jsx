@@ -4,7 +4,7 @@ import { useToast } from '../../context/ToastContext';
 import { MapPin, Search, Check, X, Clock, Navigation } from 'lucide-react';
 
 export default function PickupStopModal({ isOpen, onClose }) {
-  const { stops, selectedPickupStopId, setSelectedPickupStopId } = useSimulation();
+  const { stops, selectedPickupStopId, setSelectedPickupStopId, activeBus } = useSimulation();
   const [searchTerm, setSearchTerm] = useState('');
   const toast = useToast();
 
@@ -60,7 +60,7 @@ export default function PickupStopModal({ isOpen, onClose }) {
                 Choose Your Pickup Stop
               </h3>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-                Select from official Sri Shakthi (SIET) transit stops along the Coimbatore corridor
+                {activeBus?.name} stops along {activeBus?.routeName || 'the transit corridor'}
               </p>
             </div>
           </div>

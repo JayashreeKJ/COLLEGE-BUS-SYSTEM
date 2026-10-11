@@ -59,9 +59,15 @@ export default function BusHeroStatusCard({ onOpenPickupModal, onOpenBusModal })
               <h2 style={{ fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
                 {activeBus.name}
               </h2>
-              <div className="live-indicator">
-                <span className="live-dot"></span>
-                LIVE
+              <div
+                className="live-indicator"
+                style={!activeBus?.isVerified ? { borderColor: 'rgba(245, 158, 11, 0.4)', background: 'rgba(245, 158, 11, 0.12)', color: 'var(--warning)' } : {}}
+              >
+                <span
+                  className="live-dot"
+                  style={!activeBus?.isVerified ? { background: 'var(--warning)', boxShadow: '0 0 8px var(--warning)' } : {}}
+                ></span>
+                {activeBus?.isVerified ? 'LIVE GPS' : 'SIMULATED'}
               </div>
             </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>

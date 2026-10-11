@@ -1,15 +1,62 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { SEEDED_COIMBATORE_STOPS, DEFAULT_PICKUP_STOP_ID, COLLEGE_INFO } from '../data/coimbatoreRouteData';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { SEEDED_COIMBATORE_STOPS, DEFAULT_PICKUP_STOP_ID, COLLEGE_INFO, getBusRoute } from '../data/coimbatoreRouteData';
 import { BUS_FLEET, INITIAL_NOTIFICATIONS } from '../data/busFleetData';
 import { checkBackendHealth } from '../services/healthService';
 
 const SimulationContext = createContext(null);
 
 export const SimulationProvider = ({ children }) => {
-  // Persistence helpers
-  const [selectedPickupStopId, setSelectedPickupStopIdState] = useState(() => {
-    return localStorage.getItem('smartbus_pickup_stop_id') || DEFAULT_PICKUP_STOP_ID;
+  // Bus selection state: check URL search params first, then localStorage, defaulting to BUS-12
+  const [selectedBusId, setSelectedBusIdState] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlBus = params.get('bus') || params.get('busId');
+      if (urlBus) {
+        const found = BUS_FLEET.find((b) => b.id.toLowerCase() === urlBus.toLowerCase() || b.busNumber.toLowerCase().includes(urlBus.toLowerCase()));
+        if (found) return found.id;
+        const numMatch = urlBus.match(/\d+/);
+        if (numMatch) {
+          const num = parseInt(numMatch[0], 10);
+          const padded = `BUS-${num < 10 ? '0' + num : num}`;
+          const match = BUS_FLEET.find((b) => b.id === padded || b.id === `BUS-${num}`);
+          if (match) return match.id;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return localStorage.getItem('smartbus_selected_bus_id') || 'BUS-12';
   });
+
+  // Active bus record
+  const activeBus = useMemo(() => {
+    return BUS_FLEET.find((b) => b.id === selectedBusId) ||
+           BUS_FLEET.find((b) => b.id === 'BUS-12') ||
+           BUS_FLEET[0];
+  }, [selectedBusId]);
+
+  // Stops for the active bus
+  const stops = useMemo(() => {
+    return getBusRoute(activeBus.id);
+  }, [activeBus.id]);
+
+  // Persistence helpers for pickup stop
+  const [selectedPickupStopId, setSelectedPickupStopIdState] = useState(() => {
+    const saved = localStorage.getItem('smartbus_pickup_stop_id');
+    return saved || DEFAULT_PICKUP_STOP_ID;
+  });
+
+  // Ensure pickup stop belongs to current bus route; fallback to realistic stop if not
+  useEffect(() => {
+    if (stops && stops.length > 0) {
+      const exists = stops.some((s) => s.id === selectedPickupStopId);
+      if (!exists) {
+        // Pick intermediate stop if available, or first stop
+        const fallbackIdx = Math.min(2, Math.max(0, stops.length - 2));
+        setSelectedPickupStopIdState(stops[fallbackIdx].id);
+      }
+    }
+  }, [stops, selectedPickupStopId]);
 
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem('smartbus_notifications');
@@ -26,15 +73,78 @@ export const SimulationProvider = ({ children }) => {
   // Simulation controls state
   const [isPlaying, setIsPlaying] = useState(true);
   const [speedMultiplier, setSpeedMultiplier] = useState(1); // 1x, 2x, 5x, 10x
-  const [progressIndex, setProgressIndex] = useState(4.2); // Start near Singanallur/Gandhipuram corridor
+  // Start near initial segment of route
+  const [progressIndex, setProgressIndex] = useState(() => {
+    return Math.min(2.1, Math.max(0, (getBusRoute('BUS-12').length - 1) * 0.2));
+  });
   const [speedKmh, setSpeedKmh] = useState(34);
   const [lastSyncTime, setLastSyncTime] = useState(Date.now());
   const [backendOnline, setBackendOnline] = useState(false);
   const [backendPing, setBackendPing] = useState(null);
 
-  // Active bus
-  const activeBus = BUS_FLEET[0]; // Bus 12
-  const stops = SEEDED_COIMBATORE_STOPS;
+  // Switch active bus function
+  const setSelectedBusId = useCallback((busId) => {
+    const found = BUS_FLEET.find((b) => b.id === busId || b.id.toLowerCase() === String(busId).toLowerCase());
+    if (!found) return;
+
+    setSelectedBusIdState(found.id);
+    localStorage.setItem('smartbus_selected_bus_id', found.id);
+
+    const busStops = getBusRoute(found.id);
+    // Position simulation on new route
+    const newProgress = Math.min(1.8, Math.max(0, (busStops.length - 1) * 0.25));
+    setProgressIndex(newProgress);
+    setSpeedKmh(found.speed || 32);
+
+    // Pick a default pickup stop for this new bus
+    const defaultIdx = Math.min(2, Math.max(0, busStops.length - 2));
+    if (busStops[defaultIdx]) {
+      setSelectedPickupStopIdState(busStops[defaultIdx].id);
+      localStorage.setItem('smartbus_pickup_stop_id', busStops[defaultIdx].id);
+    }
+
+    setNotifications((prev) => [
+      {
+        id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        title: `Selected ${found.name}`,
+        message: `Loaded independent corridor with ${busStops.length} stops (${found.routeName}).`,
+        time: 'Just now',
+        type: 'info',
+        read: false,
+        timestamp: Date.now()
+      },
+      ...prev.slice(0, 19)
+    ]);
+  }, []);
+
+  // Listen for URL changes with ?bus=... parameter
+  useEffect(() => {
+    const checkUrlParam = () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const urlBus = params.get('bus') || params.get('busId');
+        if (urlBus) {
+          const found = BUS_FLEET.find((b) => b.id.toLowerCase() === urlBus.toLowerCase() || b.busNumber.toLowerCase().includes(urlBus.toLowerCase()));
+          if (found && found.id !== selectedBusId) {
+            setSelectedBusId(found.id);
+          } else {
+            const numMatch = urlBus.match(/\d+/);
+            if (numMatch) {
+              const num = parseInt(numMatch[0], 10);
+              const padded = `BUS-${num < 10 ? '0' + num : num}`;
+              const match = BUS_FLEET.find((b) => b.id === padded || b.id === `BUS-${num}`);
+              if (match && match.id !== selectedBusId) {
+                setSelectedBusId(match.id);
+              }
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+    checkUrlParam();
+  }, [selectedBusId, setSelectedBusId]);
 
   // Persist notifications
   useEffect(() => {
@@ -117,7 +227,7 @@ export const SimulationProvider = ({ children }) => {
           const reachedStop = stops[nextFloor];
           addNotification({
             title: `Arrived at ${reachedStop.name}`,
-            message: `Bus 12 has reached ${reachedStop.name} (Stop #${reachedStop.sequence}). Next stop: ${
+            message: `${activeBus.name} reached ${reachedStop.name} (Stop #${reachedStop.sequence}). Next: ${
               stops[nextFloor + 1]?.name || 'SIET Campus'
             }.`,
             type: reachedStop.id === selectedPickupStopId ? 'warning' : 'info'
@@ -129,7 +239,7 @@ export const SimulationProvider = ({ children }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPlaying, speedMultiplier, stops, selectedPickupStopId, addNotification]);
+  }, [isPlaying, speedMultiplier, stops, selectedPickupStopId, addNotification, activeBus.name]);
 
   // Compute interpolated GPS coordinates
   const floorIdx = Math.floor(progressIndex);
@@ -139,11 +249,11 @@ export const SimulationProvider = ({ children }) => {
   const currentStop = stops[floorIdx] || stops[0];
   const nextStop = stops[ceilIdx] || stops[stops.length - 1];
 
-  const currentLat = currentStop.lat + (nextStop.lat - currentStop.lat) * fraction;
-  const currentLng = currentStop.lng + (nextStop.lng - currentStop.lng) * fraction;
+  const currentLat = currentStop ? currentStop.lat + (nextStop.lat - currentStop.lat) * fraction : COLLEGE_INFO.coordinates.lat;
+  const currentLng = currentStop ? currentStop.lng + (nextStop.lng - currentStop.lng) * fraction : COLLEGE_INFO.coordinates.lng;
 
   // Selected pickup stop object
-  const selectedPickupStop = stops.find((s) => s.id === selectedPickupStopId) || stops[4]; // Singanallur default
+  const selectedPickupStop = stops.find((s) => s.id === selectedPickupStopId) || stops[Math.min(2, stops.length - 1)] || stops[0];
   const pickupStopIndex = stops.findIndex((s) => s.id === selectedPickupStopId);
 
   // Dynamic ETA calculations
@@ -170,9 +280,18 @@ export const SimulationProvider = ({ children }) => {
   }
 
   // Distance calculations
-  const progressPercent = Math.min(100, Math.max(0, (progressIndex / (totalStops - 1)) * 100));
-  const totalRouteKm = 45.2;
-  const distanceTravelledKm = ((progressIndex / (totalStops - 1)) * totalRouteKm).toFixed(1);
+  const progressPercent = Math.min(100, Math.max(0, (progressIndex / Math.max(1, totalStops - 1)) * 100));
+  const totalRouteKm = useMemo(() => {
+    if (!stops || stops.length === 0) return 30.0;
+    const last = stops[stops.length - 1];
+    if (last && last.distanceFromStart) {
+      const parsed = parseFloat(last.distanceFromStart);
+      if (!isNaN(parsed) && parsed > 0) return parsed;
+    }
+    return 35.0;
+  }, [stops]);
+
+  const distanceTravelledKm = ((progressIndex / Math.max(1, totalStops - 1)) * totalRouteKm).toFixed(1);
   const distanceRemainingKm = Math.max(0, totalRouteKm - distanceTravelledKm).toFixed(1);
 
   // Controls
@@ -182,7 +301,7 @@ export const SimulationProvider = ({ children }) => {
     setSpeedKmh(34);
     addNotification({
       title: 'Simulation Reset',
-      message: 'Bus position reset to Pappampatti Pirivu (Stop 1).',
+      message: `${activeBus.name} position reset to origin (${stops[0]?.name || 'Stop 1'}).`,
       type: 'info'
     });
   };
@@ -194,10 +313,15 @@ export const SimulationProvider = ({ children }) => {
   };
 
   const value = {
+    // Bus Selection & Fleet
+    availableBuses: BUS_FLEET,
+    selectedBusId,
+    setSelectedBusId,
+    activeBus,
     // Stops and College Data
     stops,
     collegeInfo: COLLEGE_INFO,
-    activeBus,
+    totalRouteKm,
     // Simulation Live States
     isPlaying,
     speedMultiplier,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SCHEDULES, BUS_FLEET } from '../../data/busFleetData';
+import { useSimulation } from '../../context/SimulationContext';
 import { useToast } from '../../context/ToastContext';
 import SmartBusLogo from '../../components/common/SmartBusLogo';
 import {
@@ -21,6 +22,7 @@ export default function SchedulePage() {
   const [selectedShift, setSelectedShift] = useState('ALL'); // 'ALL' | 'Morning' | 'Afternoon' | 'Evening'
   const [searchTerm, setSearchTerm] = useState('');
   const toast = useToast();
+  const { setSelectedBusId } = useSimulation();
 
   const filteredSchedules = SCHEDULES.filter((sched) => {
     const matchesShift = selectedShift === 'ALL' || sched.type === selectedShift;
@@ -207,11 +209,12 @@ export default function SchedulePage() {
 
               {/* Action */}
               <Link
-                to="/student"
+                to={`/student?bus=${sched.busId}`}
+                onClick={() => setSelectedBusId(sched.busId)}
                 className="btn btn-secondary"
                 style={{ width: '100%', fontSize: '0.85rem', justifyContent: 'center' }}
               >
-                Track This Bus Live →
+                Track {sched.busNumber} Live →
               </Link>
             </div>
           );

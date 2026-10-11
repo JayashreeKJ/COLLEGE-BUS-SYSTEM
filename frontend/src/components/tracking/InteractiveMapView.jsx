@@ -31,14 +31,33 @@ export default function InteractiveMapView({ onSelectStop, height = '560px' }) {
   const mapHeight = 680;
   const padding = 70;
 
-  // Exact Bounding box for Coimbatore Route
+  // Dynamic Bounding box adapted for the selected bus's stops and SIET campus
   const bounds = useMemo(() => {
-    let minLat = 10.975;
-    let maxLat = 11.200;
-    let minLng = 76.920;
-    let maxLng = 77.095;
-    return { minLat, maxLat, minLng, maxLng };
-  }, []);
+    const allPoints = [
+      ...(stops && stops.length > 0 ? stops : [{ lat: 11.0337, lng: 77.0784 }]),
+      { lat: collegeInfo?.coordinates?.lat || 11.0337, lng: collegeInfo?.coordinates?.lng || 77.0784 }
+    ];
+    let minLat = Math.min(...allPoints.map((p) => p.lat));
+    let maxLat = Math.max(...allPoints.map((p) => p.lat));
+    let minLng = Math.min(...allPoints.map((p) => p.lng));
+    let maxLng = Math.max(...allPoints.map((p) => p.lng));
+
+    const latSpan = Math.max(0.04, maxLat - minLat);
+    const lngSpan = Math.max(0.04, maxLng - minLng);
+    return {
+      minLat: minLat - latSpan * 0.14,
+      maxLat: maxLat + latSpan * 0.14,
+      minLng: minLng - lngSpan * 0.14,
+      maxLng: maxLng + lngSpan * 0.14
+    };
+  }, [stops, collegeInfo]);
+
+  // Reset view when active bus switches
+  React.useEffect(() => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setSelectedStopPopup(null);
+  }, [activeBus?.id]);
 
   const projectPoint = (lat, lng) => {
     const xRatio = (lng - bounds.minLng) / (bounds.maxLng - bounds.minLng);
@@ -55,7 +74,7 @@ export default function InteractiveMapView({ onSelectStop, height = '560px' }) {
       const { x, y } = projectPoint(stop.lat, stop.lng);
       return { ...stop, x, y };
     });
-  }, [stops, mapWidth, mapHeight, padding]);
+  }, [stops, bounds, mapWidth, mapHeight, padding]);
 
   // Projected position for current animated bus
   const projectedBus = useMemo(() => {
@@ -347,9 +366,9 @@ export default function InteractiveMapView({ onSelectStop, height = '560px' }) {
 
             {/* Floating Live Telemetry Badge above bus */}
             <g transform="translate(0, -32)">
-              <rect x="-55" y="-12" width="110" height="20" rx="5" fill="#070711" stroke="#22d3ee" strokeWidth="1.2" />
+              <rect x="-65" y="-12" width="130" height="20" rx="5" fill="#070711" stroke="#22d3ee" strokeWidth="1.2" />
               <text x="0" y="2" textAnchor="middle" fill="#22d3ee" fontSize="9" fontWeight="800" fontFamily="var(--font-mono)">
-                BUS 12 • {currentLocation.speed} KM/H
+                {activeBus?.busNumber ? `${activeBus.busNumber} • ${currentLocation.speed} KM/H` : `BUS ${activeBus?.id?.replace('BUS-', '')} • ${currentLocation.speed} KM/H`}
               </text>
             </g>
           </g>
@@ -429,11 +448,11 @@ export default function InteractiveMapView({ onSelectStop, height = '560px' }) {
           <SmartBusLogo size={22} />
           <div>
             <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              Coimbatore Transit Radar
+              {activeBus?.name || 'Coimbatore Transit Radar'}
               <span className="live-dot" style={{ width: '6px', height: '6px' }}></span>
             </div>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              25 STOPS • LIVE TELEMETRY
+              {stops.length} STOPS • {activeBus?.isVerified ? 'VERIFIED LIVE GPS' : 'SIMULATED CORRIDOR'}
             </div>
           </div>
         </div>

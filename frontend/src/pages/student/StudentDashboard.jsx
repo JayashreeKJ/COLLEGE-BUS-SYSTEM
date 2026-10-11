@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSimulation } from '../../context/SimulationContext';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -21,13 +21,22 @@ import {
   User,
   Sparkles,
   Route,
-  ArrowRight
+  ArrowRight,
+  Bus,
+  Search,
+  ChevronDown,
+  Check,
+  ShieldCheck,
+  AlertCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
   const {
+    availableBuses = [],
+    selectedBusId,
+    setSelectedBusId,
     activeBus,
     selectedPickupStop,
     currentStop,
@@ -41,6 +50,27 @@ export default function StudentDashboard() {
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
   const [isBusDetailModalOpen, setIsBusDetailModalOpen] = useState(false);
   const [selectedMapStop, setSelectedMapStop] = useState(null);
+
+  // Bus selector state
+  const [busSearchTerm, setBusSearchTerm] = useState('');
+  const [isBusDropdownOpen, setIsBusDropdownOpen] = useState(false);
+
+  const filteredBuses = useMemo(() => {
+    if (!busSearchTerm) return availableBuses;
+    const term = busSearchTerm.toLowerCase();
+    return availableBuses.filter((b) =>
+      b.name.toLowerCase().includes(term) ||
+      b.busNumber.toLowerCase().includes(term) ||
+      b.routeName.toLowerCase().includes(term) ||
+      b.id.toLowerCase().includes(term)
+    );
+  }, [availableBuses, busSearchTerm]);
+
+  const handleSelectBus = (busId) => {
+    setSelectedBusId(busId);
+    setIsBusDropdownOpen(false);
+    toast.success(`Active map isolated to Bus ${busId.replace('BUS-', '')}'s dedicated corridor`);
+  };
 
   return (
     <div className="main-content" style={{ maxWidth: '1440px', padding: '1.25rem 1.5rem 3rem' }}>
@@ -62,11 +92,11 @@ export default function StudentDashboard() {
             </h1>
             <div className="live-indicator">
               <span className="live-dot"></span>
-              LIVE GPS
+              {activeBus?.isVerified ? 'LIVE GPS' : 'RADAR ACTIVE'}
             </div>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-            Sri Shakthi Institute of Engineering & Technology — Bus 12 Express Corridor
+            Sri Shakthi Institute of Engineering & Technology — <strong>{activeBus?.name}</strong>
           </p>
         </div>
 
@@ -93,8 +123,168 @@ export default function StudentDashboard() {
             className="btn btn-secondary"
             style={{ padding: '0.45rem 0.95rem', fontSize: '0.82rem' }}
           >
-            <Route size={14} /> Full Route Timeline
+            <Route size={14} /> Full Route Timeline ({stops.length} stops)
           </Link>
+        </div>
+      </div>
+
+      {/* DEDICATED BUS SELECTOR CONTROL (BUS 01 THROUGH BUS 16) */}
+      <div
+        className="card glow-border"
+        style={{
+          marginBottom: '1.25rem',
+          padding: '1rem 1.25rem',
+          background: 'linear-gradient(135deg, rgba(17, 16, 29, 0.95), rgba(11, 10, 22, 0.98))',
+          border: '1px solid var(--border-purple)'
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+            marginBottom: '0.85rem'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'rgba(34, 211, 238, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--accent-cyan)'
+              }}
+            >
+              <Bus size={18} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>
+                Isolated Bus Fleet Tracking
+              </div>
+              <div style={{ fontSize: '1rem', fontWeight: 800, color: '#f5f3ff' }}>
+                Select Your College Bus: <span style={{ color: 'var(--accent-cyan)' }}>{activeBus?.name}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Search Input for buses */}
+          <div style={{ position: 'relative', minWidth: '240px', flex: '1', maxWidth: '340px' }}>
+            <Search
+              size={14}
+              style={{
+                position: 'absolute',
+                left: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'var(--text-dim)'
+              }}
+            />
+            <input
+              type="text"
+              className="form-input"
+              style={{ paddingLeft: '32px', paddingRight: '10px', paddingTop: '0.4rem', paddingBottom: '0.4rem', fontSize: '0.82rem' }}
+              placeholder="Search bus #, corridor, area..."
+              value={busSearchTerm}
+              onChange={(e) => setBusSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Quick Bus Selector Buttons (Bus 01 to Bus 16 + Fleet) */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '0.45rem',
+            overflowX: 'auto',
+            paddingBottom: '0.4rem',
+            scrollbarWidth: 'thin'
+          }}
+        >
+          {filteredBuses.map((bus) => {
+            const isSelected = bus.id === selectedBusId;
+            const busNumStr = bus.id.replace('BUS-', '');
+            return (
+              <button
+                key={bus.id}
+                onClick={() => handleSelectBus(bus.id)}
+                className="btn"
+                style={{
+                  padding: '0.45rem 0.85rem',
+                  fontSize: '0.82rem',
+                  whiteSpace: 'nowrap',
+                  borderRadius: 'var(--radius-sm)',
+                  fontWeight: isSelected ? 800 : 600,
+                  background: isSelected
+                    ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(34, 211, 238, 0.25))'
+                    : 'rgba(255, 255, 255, 0.04)',
+                  color: isSelected ? '#ffffff' : 'var(--text-muted)',
+                  border: isSelected
+                    ? '1.5px solid var(--accent-cyan)'
+                    : '1px solid var(--border-color)',
+                  boxShadow: isSelected ? '0 0 14px rgba(34, 211, 238, 0.3)' : 'none',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}
+                title={`${bus.name} — ${bus.routeName}`}
+              >
+                <span
+                  style={{
+                    width: '7px',
+                    height: '7px',
+                    borderRadius: '50%',
+                    background: isSelected
+                      ? 'var(--accent-cyan)'
+                      : bus.status === 'LIVE'
+                      ? '#22c55e'
+                      : '#94a3b8'
+                  }}
+                />
+                <span>Bus {busNumStr}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Corridor Context & Verification Notice Strip */}
+        <div
+          style={{
+            marginTop: '0.65rem',
+            paddingTop: '0.65rem',
+            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+            fontSize: '0.78rem'
+          }}
+        >
+          <div style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Route size={14} style={{ color: 'var(--accent-cyan)' }} />
+            <span>
+              Corridor: <strong>{activeBus?.routeName}</strong> ({stops.length} stops)
+            </span>
+          </div>
+
+          <div>
+            {activeBus?.isVerified ? (
+              <span style={{ color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                <ShieldCheck size={14} /> Official GPS Transponder Verified
+              </span>
+            ) : (
+              <span style={{ color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                <AlertCircle size={14} /> Realistic Corridor Route (Simulation mode — Verification pending)
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

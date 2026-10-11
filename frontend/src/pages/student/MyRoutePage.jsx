@@ -18,10 +18,14 @@ import { Link } from 'react-router-dom';
 
 export default function MyRoutePage() {
   const {
+    availableBuses = [],
+    selectedBusId,
+    setSelectedBusId,
     stops,
     collegeInfo,
     activeBus,
     selectedPickupStop,
+    totalRouteKm,
     progressIndex
   } = useSimulation();
 
@@ -31,9 +35,9 @@ export default function MyRoutePage() {
   return (
     <div className="main-content" style={{ maxWidth: '1100px', padding: '1.5rem 1.5rem 3.5rem' }}>
       {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
+      <div style={{ marginBottom: '1.5rem' }}>
         <Link
-          to="/student"
+          to={`/student?bus=${activeBus?.id}`}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -57,20 +61,71 @@ export default function MyRoutePage() {
         >
           <div>
             <h1 style={{ fontSize: '1.85rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-              Coimbatore Transit Route Corridor
+              {activeBus?.name} Route Corridor
             </h1>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-              Official Sri Shakthi sequence from <strong>Pappampatti Pirivu (6:20 AM)</strong> to <strong>SIET Main Campus (8:13 AM)</strong>
+              Sri Shakthi Transit corridor from <strong>{stops[0]?.name} ({stops[0]?.scheduledTime})</strong> to <strong>{stops[stops.length - 1]?.name} ({stops[stops.length - 1]?.scheduledTime})</strong>
             </p>
           </div>
 
-          <button
-            onClick={() => setIsPickupModalOpen(true)}
-            className="btn btn-primary"
-            style={{ fontSize: '0.88rem', padding: '0.55rem 1.1rem' }}
-          >
-            <MapPin size={16} /> Change My Pickup Stop
-          </button>
+          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setIsPickupModalOpen(true)}
+              className="btn btn-primary"
+              style={{ fontSize: '0.88rem', padding: '0.55rem 1.1rem' }}
+            >
+              <MapPin size={16} /> Change My Pickup Stop
+            </button>
+            <Link
+              to={`/student?bus=${activeBus?.id}`}
+              className="btn btn-secondary"
+              style={{ fontSize: '0.88rem', padding: '0.55rem 1.1rem' }}
+            >
+              <Navigation size={16} /> Track on Map →
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Compact Quick Bus Corridor Switcher */}
+      <div
+        className="card"
+        style={{
+          padding: '0.75rem 1rem',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          overflowX: 'auto',
+          background: 'rgba(11, 10, 22, 0.85)'
+        }}
+      >
+        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', whiteSpace: 'nowrap', textTransform: 'uppercase' }}>
+          Select Bus:
+        </span>
+        <div style={{ display: 'flex', gap: '0.4rem' }}>
+          {availableBuses.map((bus) => {
+            const isSel = bus.id === selectedBusId;
+            return (
+              <button
+                key={bus.id}
+                onClick={() => setSelectedBusId(bus.id)}
+                className="btn"
+                style={{
+                  padding: '0.35rem 0.7rem',
+                  fontSize: '0.78rem',
+                  whiteSpace: 'nowrap',
+                  borderRadius: 'var(--radius-sm)',
+                  fontWeight: isSel ? 800 : 500,
+                  background: isSel ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                  color: isSel ? '#000000' : 'var(--text-muted)',
+                  border: isSel ? '1px solid var(--primary)' : '1px solid var(--border-color)'
+                }}
+              >
+                Bus {bus.id.replace('BUS-', '')}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -90,7 +145,7 @@ export default function MyRoutePage() {
           <div className="telemetry-num telemetry-glow" style={{ fontSize: '1.6rem' }}>
             {stops.length} Stops
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Coimbatore Urban Corridor</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{activeBus?.routeName}</div>
         </div>
 
         <div className="card" style={{ padding: '1.25rem' }}>
@@ -98,9 +153,9 @@ export default function MyRoutePage() {
             Corridor Distance
           </div>
           <div className="telemetry-num" style={{ fontSize: '1.6rem', color: 'var(--text-main)' }}>
-            45.2 km
+            {totalRouteKm} km
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>End-to-End Transit Line</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Origin to SIET Campus</div>
         </div>
 
         <div className="card" style={{ padding: '1.25rem' }}>
