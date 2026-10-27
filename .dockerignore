@@ -1,0 +1,10 @@
+frontend/
+node_modules/
+dist/
+build/
+backend/target/
+.git
+.vscode/
+.idea/
+documentation/
+*.log
