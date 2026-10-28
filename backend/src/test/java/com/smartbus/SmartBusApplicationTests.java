@@ -8,7 +8,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.security.test.context.support.WithMockUser;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,5 +41,63 @@ class SmartBusApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(jsonPath("$.message").value("SmartBus Backend API is running successfully"));
+    }
+
+    @Test
+    void adminEndpointUnauthenticatedReturns401() throws Exception {
+        mockMvc.perform(get("/api/admin/stats")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(username = "student@college.edu", roles = {"STUDENT"})
+    void adminEndpointWithStudentRoleReturns403() throws Exception {
+        mockMvc.perform(get("/api/admin/stats")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "driver@college.edu", roles = {"DRIVER"})
+    void adminEndpointWithDriverRoleReturns403() throws Exception {
+        mockMvc.perform(get("/api/admin/stats")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@college.edu", roles = {"ADMIN"})
+    void adminEndpointWithAdminRoleReturnsOk() throws Exception {
+        mockMvc.perform(get("/api/admin/stats")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalDrivers").isNumber());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@college.edu", roles = {"ADMIN"})
+    void adminCanUpdateDriverProfile() throws Exception {
+        String updatePayload = "{\"name\":\"Updated Driver Name\",\"photoUrl\":\"/uploads/drivers/custom.png\"}";
+
+        mockMvc.perform(put("/api/admin/drivers/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(updatePayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.name").value("Updated Driver Name"))
+                .andExpect(jsonPath("$.data.photoUrl").value("/uploads/drivers/custom.png"));
+    }
+
+    @Test
+    @WithMockUser(username = "student@college.edu", roles = {"STUDENT"})
+    void studentCannotUpdateDriverProfile() throws Exception {
+        String updatePayload = "{\"name\":\"Hacked Name\"}";
+
+        mockMvc.perform(put("/api/admin/drivers/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(updatePayload))
+                .andExpect(status().isForbidden());
     }
 }

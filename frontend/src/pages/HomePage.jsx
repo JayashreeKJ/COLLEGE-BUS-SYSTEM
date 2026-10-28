@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { checkBackendHealth } from '../services/healthService';
 import SmartBusLogo from '../components/common/SmartBusLogo';
 import { Bus, Shield, GraduationCap } from 'lucide-react';
 
 export default function HomePage() {
+  const { hasRole } = useAuth();
   const [healthData, setHealthData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -78,19 +80,21 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Admin Portal */}
-          <div className="card">
-            <div style={{ color: 'var(--purple)', marginBottom: '0.75rem' }}>
-              <Shield size={36} />
+          {/* Admin Portal - Only visible to Admins */}
+          {hasRole('ADMIN') && (
+            <div className="card">
+              <div style={{ color: 'var(--purple)', marginBottom: '0.75rem' }}>
+                <Shield size={36} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Admin Portal</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+                Manage fleet vehicles, driver registrations, routes, sequenced stops, timetables, and monitor active campus trips.
+              </p>
+              <Link to="/admin" className="btn btn-secondary" style={{ width: '100%', fontSize: '0.85rem' }}>
+                Open Admin Portal →
+              </Link>
             </div>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Admin Portal</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-              Manage fleet vehicles, driver registrations, routes, sequenced stops, timetables, and monitor active campus trips.
-            </p>
-            <Link to="/admin" className="btn btn-secondary" style={{ width: '100%', fontSize: '0.85rem' }}>
-              Open Admin Portal →
-            </Link>
-          </div>
+          )}
         </div>
       </section>
 

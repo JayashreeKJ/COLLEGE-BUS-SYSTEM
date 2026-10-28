@@ -97,12 +97,14 @@ export default function Header() {
               <Calendar size={15} /> Bus Schedule
             </NavLink>
 
-            <NavLink
-              to="/admin"
-              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
-            >
-              <Shield size={15} /> Admin
-            </NavLink>
+            {hasRole('ADMIN') && (
+              <NavLink
+                to="/admin"
+                className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+              >
+                <Shield size={15} /> Admin
+              </NavLink>
+            )}
           </nav>
 
           {/* Right Utilities */}

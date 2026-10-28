@@ -60,6 +60,29 @@ public class DriverService {
         return populateDriverDetails(driver);
     }
 
+    @Transactional
+    public DriverDTO updateDriverProfile(Long id, com.smartbus.dto.UpdateDriverRequest request) {
+        Driver driver = driverRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Driver", "id", id));
+
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            User user = driver.getUser();
+            if (user != null) {
+                user.setName(request.getName().trim());
+                userRepository.save(user);
+            }
+        }
+
+        if (Boolean.TRUE.equals(request.getRemovePhoto())) {
+            driver.setPhotoUrl(null);
+        } else if (request.getPhotoUrl() != null) {
+            driver.setPhotoUrl(request.getPhotoUrl());
+        }
+
+        Driver savedDriver = driverRepository.save(driver);
+        return populateDriverDetails(savedDriver);
+    }
+
     private DriverDTO populateDriverDetails(Driver driver) {
         DriverDTO dto = DriverDTO.fromEntity(driver);
 

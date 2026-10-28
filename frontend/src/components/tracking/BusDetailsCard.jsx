@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSimulation } from '../../context/SimulationContext';
 import { useToast } from '../../context/ToastContext';
 import { Bus, User, Phone, ShieldCheck, Users, Flame, Star, Award, CheckCircle } from 'lucide-react';
+import DriverAvatar from '../common/DriverAvatar';
 
 export default function BusDetailsCard() {
   const { activeBus } = useSimulation();
@@ -145,16 +146,11 @@ export default function BusDetailsCard() {
               border: '1px solid var(--border-color)'
             }}
           >
-            <img
+            <DriverAvatar
               src={activeBus.driver.photo}
               alt={activeBus.driver.name}
-              style={{
-                width: '54px',
-                height: '54px',
-                borderRadius: '50%',
-                objectFit: 'cover',
-                border: '2px solid var(--accent)'
-              }}
+              size={54}
+              style={{ border: '2px solid var(--accent)' }}
             />
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useSimulation } from '../../context/SimulationContext';
 import SmartBusLogo from './SmartBusLogo';
 import { Bus, MapPin, Phone, Shield, Radio, Heart } from 'lucide-react';
 
 export default function Footer() {
+  const { hasRole } = useAuth();
   const { collegeInfo, backendOnline } = useSimulation();
 
   return (
@@ -61,11 +63,13 @@ export default function Footer() {
                 Timetables & Shifts
               </Link>
             </li>
-            <li>
-              <Link to="/admin" style={{ color: 'var(--text-muted)' }}>
-                Fleet Admin Dashboard
-              </Link>
-            </li>
+            {hasRole('ADMIN') && (
+              <li>
+                <Link to="/admin" style={{ color: 'var(--text-muted)' }}>
+                  Fleet Admin Dashboard
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
 

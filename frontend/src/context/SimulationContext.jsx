@@ -28,12 +28,69 @@ export const SimulationProvider = ({ children }) => {
     return localStorage.getItem('smartbus_selected_bus_id') || 'BUS-12';
   });
 
+  // Driver overrides state persisted in localStorage
+  const [driverOverrides, setDriverOverrides] = useState(() => {
+    try {
+      const saved = localStorage.getItem('smartbus_driver_overrides');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    const handleDriverUpdated = () => {
+      try {
+        const saved = localStorage.getItem('smartbus_driver_overrides');
+        setDriverOverrides(saved ? JSON.parse(saved) : {});
+      } catch {
+        // ignore
+      }
+    };
+    window.addEventListener('smartbus_driver_updated', handleDriverUpdated);
+    return () => window.removeEventListener('smartbus_driver_updated', handleDriverUpdated);
+  }, []);
+
+  const updateDriverProfileOverride = useCallback((driverId, { name, photo }) => {
+    setDriverOverrides((prev) => {
+      const updated = {
+        ...prev,
+        [driverId]: {
+          ...(prev[driverId] || {}),
+          ...(name !== undefined ? { name } : {}),
+          ...(photo !== undefined ? { photo } : {}),
+        }
+      };
+      localStorage.setItem('smartbus_driver_overrides', JSON.stringify(updated));
+      return updated;
+    });
+    window.dispatchEvent(new CustomEvent('smartbus_driver_updated', { detail: { driverId, name, photo } }));
+  }, []);
+
+  // Compute fleet with overrides
+  const fleet = useMemo(() => {
+    return BUS_FLEET.map((bus) => {
+      if (bus.driver && driverOverrides[bus.driver.id]) {
+        const override = driverOverrides[bus.driver.id];
+        return {
+          ...bus,
+          driver: {
+            ...bus.driver,
+            name: override.name !== undefined ? override.name : bus.driver.name,
+            photo: override.photo !== undefined ? override.photo : bus.driver.photo,
+          }
+        };
+      }
+      return bus;
+    });
+  }, [driverOverrides]);
+
   // Active bus record
   const activeBus = useMemo(() => {
-    return BUS_FLEET.find((b) => b.id === selectedBusId) ||
-           BUS_FLEET.find((b) => b.id === 'BUS-12') ||
-           BUS_FLEET[0];
-  }, [selectedBusId]);
+    return fleet.find((b) => b.id === selectedBusId) ||
+           fleet.find((b) => b.id === 'BUS-12') ||
+           fleet[0];
+  }, [fleet, selectedBusId]);
 
   // Stops for the active bus
   const stops = useMemo(() => {
@@ -314,10 +371,12 @@ export const SimulationProvider = ({ children }) => {
 
   const value = {
     // Bus Selection & Fleet
-    availableBuses: BUS_FLEET,
+    availableBuses: fleet,
     selectedBusId,
     setSelectedBusId,
     activeBus,
+    driverOverrides,
+    updateDriverProfileOverride,
     // Stops and College Data
     stops,
     collegeInfo: COLLEGE_INFO,

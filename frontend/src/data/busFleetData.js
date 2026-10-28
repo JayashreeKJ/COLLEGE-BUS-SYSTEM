@@ -20,7 +20,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11001",
       experience: "7 years at SIET",
       rating: 4.8,
-      photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2016-001001"
     },
@@ -49,7 +49,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11002",
       experience: "9 years at SIET",
       rating: 4.9,
-      photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2014-001002"
     },
@@ -78,7 +78,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11003",
       experience: "6 years at SIET",
       rating: 4.7,
-      photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2018-001003"
     },
@@ -107,7 +107,7 @@ export const BUS_FLEET = [
       phone: "+91 97890 12345",
       experience: "6 years at SIET",
       rating: 4.8,
-      photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2018-004456"
     },
@@ -136,7 +136,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11005",
       experience: "8 years at SIET",
       rating: 4.9,
-      photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2015-001005"
     },
@@ -165,7 +165,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11006",
       experience: "10 years at SIET",
       rating: 4.9,
-      photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2013-001006"
     },
@@ -194,7 +194,7 @@ export const BUS_FLEET = [
       phone: "+91 94432 98765",
       experience: "11 years at SIET",
       rating: 5.0,
-      photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2012-001290"
     },
@@ -223,7 +223,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11008",
       experience: "5 years at SIET",
       rating: 4.8,
-      photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2019-001008"
     },
@@ -252,7 +252,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11009",
       experience: "7 years at SIET",
       rating: 4.7,
-      photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2017-001009"
     },
@@ -281,7 +281,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11010",
       experience: "9 years at SIET",
       rating: 4.9,
-      photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2015-001010"
     },
@@ -310,7 +310,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11011",
       experience: "4 years at SIET",
       rating: 4.8,
-      photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2020-001011"
     },
@@ -339,7 +339,7 @@ export const BUS_FLEET = [
       phone: "+91 98432 76543",
       experience: "8 years at SIET",
       rating: 4.9,
-      photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2015-009823"
     },
@@ -368,7 +368,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11013",
       experience: "6 years at SIET",
       rating: 4.8,
-      photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2018-001013"
     },
@@ -397,7 +397,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11014",
       experience: "8 years at SIET",
       rating: 4.9,
-      photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2016-001014"
     },
@@ -426,7 +426,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 11015",
       experience: "10 years at SIET",
       rating: 5.0,
-      photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2014-001015"
     },
@@ -455,7 +455,7 @@ export const BUS_FLEET = [
       phone: "+91 99944 55667",
       experience: "5 years at SIET",
       rating: 4.8,
-      photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN39-2019-007812"
     },
@@ -484,7 +484,7 @@ export const BUS_FLEET = [
       phone: "+91 99944 55668",
       experience: "6 years at SIET",
       rating: 4.7,
-      photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "Standby",
       licenseNo: "TN39-2018-009912"
     },
@@ -513,7 +513,7 @@ export const BUS_FLEET = [
       phone: "+91 98421 88990",
       experience: "9 years at SIET",
       rating: 4.9,
-      photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80",
+      photo: null,
       status: "On Route",
       licenseNo: "TN38-2014-003321"
     },

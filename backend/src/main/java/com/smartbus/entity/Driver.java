@@ -33,6 +33,9 @@ public class Driver {
     @Column(name = "status", nullable = false, length = 20)
     private DriverStatus status = DriverStatus.AVAILABLE;
 
+    @Column(name = "photo_url", length = 500)
+    private String photoUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -117,6 +120,14 @@ public class Driver {
 
     public void setStatus(DriverStatus status) {
         this.status = status;
+    }
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
     }
 
     public LocalDateTime getCreatedAt() {

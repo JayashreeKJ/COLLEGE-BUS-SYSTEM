@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BUS_FLEET, SCHEDULES } from '../../data/busFleetData';
 import { SEEDED_COIMBATORE_STOPS } from '../../data/coimbatoreRouteData';
 import { useSimulation } from '../../context/SimulationContext';
 import { useToast } from '../../context/ToastContext';
+import api from '../../services/api';
+import DriverAvatar from '../../components/common/DriverAvatar';
 import {
   Shield,
   Bus,
@@ -22,15 +24,16 @@ import {
   TrendingUp,
   X,
   Save,
-  Check
+  Check,
+  Camera
 } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { stops } = useSimulation();
+  const { stops, availableBuses, updateDriverProfileOverride, backendOnline } = useSimulation();
   const toast = useToast();
 
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'buses' | 'routes' | 'drivers' | 'students'
-  const [buses, setBuses] = useState(BUS_FLEET);
+  const [buses, setBuses] = useState(availableBuses || BUS_FLEET);
   const [routeStops, setRouteStops] = useState(SEEDED_COIMBATORE_STOPS);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -38,6 +41,19 @@ export default function AdminDashboard() {
   const [isAddBusModalOpen, setIsAddBusModalOpen] = useState(false);
   const [isAddStopModalOpen, setIsAddStopModalOpen] = useState(false);
   const [selectedBusForEdit, setSelectedBusForEdit] = useState(null);
+
+  // Edit Driver state
+  const [isEditDriverModalOpen, setIsEditDriverModalOpen] = useState(false);
+  const [selectedDriverForEdit, setSelectedDriverForEdit] = useState(null);
+  const [editDriverForm, setEditDriverForm] = useState({
+    name: '',
+    photo: null,
+    photoFile: null,
+    previewUrl: null,
+    isRemoved: false
+  });
+  const [editDriverError, setEditDriverError] = useState('');
+  const [isSavingDriver, setIsSavingDriver] = useState(false);
 
   // New Stop Form
   const [newStopForm, setNewStopForm] = useState({
@@ -119,7 +135,7 @@ export default function AdminDashboard() {
         phone: newBusForm.driverPhone,
         experience: 'New Fleet Hire',
         rating: 5.0,
-        photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+        photo: null,
         status: 'Standby',
         licenseNo: 'TN38-2024-001122'
       },
@@ -129,6 +145,129 @@ export default function AdminDashboard() {
     setBuses((prev) => [...prev, newBus]);
     toast.success(`Vehicle "${newBus.name}" registered to SIET fleet`);
     setIsAddBusModalOpen(false);
+  };
+
+  const handleOpenEditDriver = (driver, bus) => {
+    setSelectedDriverForEdit({ driver, busId: bus.id });
+    setEditDriverForm({
+      name: driver.name || '',
+      photo: driver.photo || null,
+      photoFile: null,
+      previewUrl: driver.photo || null,
+      isRemoved: false
+    });
+    setEditDriverError('');
+    setIsEditDriverModalOpen(true);
+  };
+
+  const handleDriverPhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setEditDriverError('Invalid format. Please select a JPEG, PNG, or WebP image.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setEditDriverError('File size exceeds the 5MB limit.');
+      return;
+    }
+
+    setEditDriverError('');
+    const preview = URL.createObjectURL(file);
+    setEditDriverForm((prev) => ({
+      ...prev,
+      photoFile: file,
+      previewUrl: preview,
+      isRemoved: false
+    }));
+  };
+
+  const handleRemoveDriverPhoto = () => {
+    setEditDriverForm((prev) => ({
+      ...prev,
+      photoFile: null,
+      previewUrl: null,
+      photo: null,
+      isRemoved: true
+    }));
+  };
+
+  const handleSaveDriverSubmit = async (e) => {
+    e.preventDefault();
+    const trimmedName = editDriverForm.name.trim();
+    if (!trimmedName) {
+      setEditDriverError('Driver name is required.');
+      return;
+    }
+
+    setIsSavingDriver(true);
+    setEditDriverError('');
+
+    try {
+      let finalPhoto = editDriverForm.isRemoved ? null : (editDriverForm.previewUrl || editDriverForm.photo);
+      const driverId = selectedDriverForEdit.driver.id;
+
+      // If backend is online, attempt backend update
+      const numericMatch = String(driverId).match(/\d+/);
+      const numericId = numericMatch ? parseInt(numericMatch[0], 10) : null;
+
+      if (backendOnline && numericId) {
+        try {
+          if (editDriverForm.photoFile) {
+            const formData = new FormData();
+            formData.append('file', editDriverForm.photoFile);
+            const uploadRes = await api.post(`/admin/drivers/${numericId}/photo`, formData, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            if (uploadRes.data?.data?.photoUrl) {
+              finalPhoto = uploadRes.data.data.photoUrl;
+            }
+          }
+          await api.put(`/admin/drivers/${numericId}`, {
+            name: trimmedName,
+            photoUrl: finalPhoto,
+            removePhoto: editDriverForm.isRemoved
+          });
+        } catch (apiErr) {
+          console.warn('Backend driver sync encountered an issue, persisting locally:', apiErr);
+        }
+      }
+
+      // Sync with SimulationContext and localStorage
+      if (updateDriverProfileOverride) {
+        updateDriverProfileOverride(driverId, {
+          name: trimmedName,
+          photo: finalPhoto
+        });
+      }
+
+      // Update local state in buses
+      setBuses((prev) =>
+        prev.map((b) => {
+          if (b.driver.id === driverId) {
+            return {
+              ...b,
+              driver: {
+                ...b.driver,
+                name: trimmedName,
+                photo: finalPhoto
+              }
+            };
+          }
+          return b;
+        })
+      );
+
+      toast.success(`Driver profile for ${trimmedName} updated successfully`);
+      setIsEditDriverModalOpen(false);
+    } catch (err) {
+      setEditDriverError(err.message || 'Failed to save driver updates');
+    } finally {
+      setIsSavingDriver(false);
+    }
   };
 
   return (
@@ -487,12 +626,13 @@ export default function AdminDashboard() {
                   alignItems: 'center'
                 }}
               >
-                <img
+                <DriverAvatar
                   src={bus.driver.photo}
                   alt={bus.driver.name}
-                  style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border-purple)' }}
+                  size={56}
+                  style={{ border: '2px solid var(--border-purple)' }}
                 />
-                <div>
+                <div style={{ flex: 1 }}>
                   <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>
                     {bus.driver.name}
                   </h4>
@@ -506,6 +646,14 @@ export default function AdminDashboard() {
                     {bus.driver.experience}
                   </div>
                 </div>
+                <button
+                  onClick={() => handleOpenEditDriver(bus.driver, bus)}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '0.78rem', padding: '0.4rem 0.75rem', gap: '0.35rem' }}
+                  title={`Edit profile for ${bus.driver.name}`}
+                >
+                  <Edit2 size={13} /> Edit
+                </button>
               </div>
             ))}
           </div>
@@ -670,6 +818,131 @@ export default function AdminDashboard() {
                 </button>
                 <button type="submit" className="btn btn-primary">
                   Register Vehicle
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Modal: Edit Driver Profile */}
+      {isEditDriverModalOpen && selectedDriverForEdit && (
+        <div className="modal-overlay" onClick={() => setIsEditDriverModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px', padding: '1.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <UserCheck size={20} style={{ color: 'var(--accent-cyan)' }} />
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>Edit Driver Profile</h3>
+              </div>
+              <button onClick={() => setIsEditDriverModalOpen(false)} className="btn-icon">
+                <X size={18} />
+              </button>
+            </div>
+
+            {editDriverError && (
+              <div
+                style={{
+                  padding: '0.75rem 1rem',
+                  marginBottom: '1rem',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.82rem',
+                  color: '#fca5a5'
+                }}
+              >
+                ⚠️ {editDriverError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveDriverSubmit}>
+              {/* Photo Preview and File Picker */}
+              <div style={{ marginBottom: '1.25rem', textAlign: 'center' }}>
+                <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', textAlign: 'left' }}>
+                  Driver Profile Photo
+                </label>
+
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', padding: '1rem', background: 'var(--bg-glass-strong)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                  <DriverAvatar
+                    src={editDriverForm.previewUrl}
+                    alt={editDriverForm.name}
+                    size={72}
+                    iconSize={36}
+                    style={{ border: '2px solid var(--border-purple)', boxShadow: '0 0 12px var(--primary-dim)' }}
+                  />
+
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <label
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.78rem', padding: '0.4rem 0.75rem', cursor: 'pointer', gap: '0.35rem' }}
+                    >
+                      <Camera size={14} /> Choose Photo
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleDriverPhotoChange}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+
+                    {editDriverForm.previewUrl && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveDriverPhoto}
+                        className="btn btn-secondary"
+                        style={{ fontSize: '0.78rem', padding: '0.4rem 0.75rem', color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                      >
+                        Remove Photo
+                      </button>
+                    )}
+                  </div>
+
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                    Allowed formats: JPEG, PNG, WebP (Max 5MB). Default icon shown when no photo is set.
+                  </span>
+                </div>
+              </div>
+
+              {/* Driver Display Name */}
+              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                <label className="form-label">Driver Display Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={editDriverForm.name}
+                  onChange={(e) => setEditDriverForm({ ...editDriverForm, name: e.target.value })}
+                  placeholder="e.g. Ramesh Kumar"
+                  required
+                />
+              </div>
+
+              {/* Readonly Metadata */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', padding: '0.75rem', background: 'var(--bg-glass)', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem', fontSize: '0.78rem' }}>
+                <div>
+                  <span style={{ color: 'var(--text-dim)', display: 'block' }}>Driver ID</span>
+                  <strong style={{ color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>{selectedDriverForEdit.driver.id}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-dim)', display: 'block' }}>Contact Phone</span>
+                  <strong style={{ color: 'var(--text-muted)' }}>{selectedDriverForEdit.driver.phone || '—'}</strong>
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsEditDriverModalOpen(false)}
+                  className="btn btn-secondary"
+                  disabled={isSavingDriver}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isSavingDriver}
+                >
+                  {isSavingDriver ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>

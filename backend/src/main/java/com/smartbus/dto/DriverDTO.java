@@ -15,6 +15,7 @@ public class DriverDTO {
     private String emergencyContact;
     private Integer experienceYears;
     private DriverStatus status;
+    private String photoUrl;
     private BusDTO assignedBus;
     private RouteDTO assignedRoute;
     private ScheduleDTO assignedSchedule;
@@ -38,6 +39,7 @@ public class DriverDTO {
         dto.setEmergencyContact(driver.getEmergencyContact());
         dto.setExperienceYears(driver.getExperienceYears());
         dto.setStatus(driver.getStatus());
+        dto.setPhotoUrl(driver.getPhotoUrl());
         return dto;
     }
 
@@ -151,5 +153,13 @@ public class DriverDTO {
 
     public void setCurrentTrip(TripDTO currentTrip) {
         this.currentTrip = currentTrip;
+    }
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
     }
 }

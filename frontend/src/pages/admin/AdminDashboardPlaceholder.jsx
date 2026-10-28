@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import DriverAvatar from '../../components/common/DriverAvatar';
 
 export default function AdminDashboardPlaceholder() {
   const { user } = useAuth();
@@ -317,7 +318,12 @@ export default function AdminDashboardPlaceholder() {
               <tbody>
                 {drivers.map((d) => (
                   <tr key={d.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <td style={{ padding: '0.75rem', fontWeight: '600' }}>{d.name}</td>
+                    <td style={{ padding: '0.75rem', fontWeight: '600' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <DriverAvatar src={d.photoUrl} alt={d.name} size={32} />
+                        <span>{d.name}</span>
+                      </div>
+                    </td>
                     <td style={{ padding: '0.75rem', color: 'var(--text-muted)' }}>{d.email}</td>
                     <td style={{ padding: '0.75rem' }}>{d.phone || '—'}</td>
                     <td style={{ padding: '0.75rem', fontFamily: 'monospace' }}>{d.licenseNumber}</td>

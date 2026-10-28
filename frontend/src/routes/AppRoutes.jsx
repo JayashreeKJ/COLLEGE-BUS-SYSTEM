@@ -25,8 +25,15 @@ export default function AppRoutes() {
       {/* Driver Cockpit */}
       <Route path="/driver" element={<DriverDashboard />} />
 
-      {/* Admin Fleet Dashboard */}
-      <Route path="/admin" element={<AdminDashboard />} />
+      {/* Admin Fleet Dashboard - Strictly Restricted to Authenticated Admins */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
