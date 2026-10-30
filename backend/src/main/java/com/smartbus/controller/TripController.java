@@ -7,6 +7,7 @@ import com.smartbus.dto.TripLocationDTO;
 import com.smartbus.service.TripService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,18 +42,21 @@ public class TripController {
         return ResponseEntity.ok(ApiResponse.ok("Driver trips retrieved successfully", tripService.getTripsByDriver(driverId)));
     }
 
+    @PreAuthorize("hasAnyRole('DRIVER', 'ADMIN')")
     @PostMapping("/{id}/start")
     public ResponseEntity<ApiResponse<TripDTO>> startTrip(@PathVariable Long id) {
         TripDTO trip = tripService.startTrip(id);
         return ResponseEntity.ok(ApiResponse.ok("Trip started successfully", trip));
     }
 
+    @PreAuthorize("hasAnyRole('DRIVER', 'ADMIN')")
     @PostMapping("/{id}/end")
     public ResponseEntity<ApiResponse<TripDTO>> endTrip(@PathVariable Long id) {
         TripDTO trip = tripService.endTrip(id);
         return ResponseEntity.ok(ApiResponse.ok("Trip ended successfully", trip));
     }
 
+    @PreAuthorize("hasAnyRole('DRIVER', 'ADMIN')")
     @PostMapping("/{id}/location")
     public ResponseEntity<ApiResponse<TripLocationDTO>> updateLocation(
             @PathVariable Long id,

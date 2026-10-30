@@ -4,6 +4,7 @@ import com.smartbus.dto.ApiResponse;
 import com.smartbus.dto.StudentDTO;
 import com.smartbus.service.StudentService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -20,11 +21,13 @@ public class StudentController {
         this.studentService = studentService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<StudentDTO>>> getAllStudents() {
         return ResponseEntity.ok(ApiResponse.ok("Students retrieved successfully", studentService.getAllStudents()));
     }
 
+    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<StudentDTO>> getMyStudentProfile(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
@@ -34,11 +37,13 @@ public class StudentController {
         return ResponseEntity.ok(ApiResponse.ok("Student profile retrieved", student));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<StudentDTO>> getStudentById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok("Student retrieved successfully", studentService.getStudentById(id)));
     }
 
+    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
     @PutMapping("/me/pickup-stop")
     public ResponseEntity<ApiResponse<StudentDTO>> updatePickupStop(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -50,6 +55,7 @@ public class StudentController {
         return ResponseEntity.ok(ApiResponse.ok("Pickup stop updated successfully", updatedStudent));
     }
 
+    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
     @PutMapping("/me/profile")
     public ResponseEntity<ApiResponse<StudentDTO>> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,

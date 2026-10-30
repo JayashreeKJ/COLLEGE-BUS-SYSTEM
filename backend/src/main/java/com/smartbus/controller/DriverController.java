@@ -4,6 +4,7 @@ import com.smartbus.dto.ApiResponse;
 import com.smartbus.dto.DriverDTO;
 import com.smartbus.service.DriverService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -20,11 +21,13 @@ public class DriverController {
         this.driverService = driverService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<DriverDTO>>> getAllDrivers() {
         return ResponseEntity.ok(ApiResponse.ok("Drivers retrieved successfully", driverService.getAllDrivers()));
     }
 
+    @PreAuthorize("hasAnyRole('DRIVER', 'ADMIN')")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<DriverDTO>> getMyDriverProfile(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
@@ -34,6 +37,7 @@ public class DriverController {
         return ResponseEntity.ok(ApiResponse.ok("Driver profile retrieved", driver));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<DriverDTO>> getDriverById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok("Driver retrieved successfully", driverService.getDriverById(id)));
